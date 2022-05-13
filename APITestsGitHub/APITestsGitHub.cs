@@ -3,9 +3,11 @@ using RestSharp;
 using RestSharp.Authenticators;
 using RestSharp.Serializers.Json;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System;
 
 namespace APITestsGitHub
 {
@@ -16,7 +18,14 @@ namespace APITestsGitHub
         public void Setup()
         {
             this.client = new RestClient("https://api.github.com");
-            this.client.Authenticator = new HttpBasicAuthenticator("gerganasuv", "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");
+            string[] lines = Array.Empty<string>();
+            string path = Directory.GetCurrentDirectory();
+            path = path.Substring(0, path.IndexOf("APITestsGitHub"));
+            foreach (string file in Directory.EnumerateFiles(path, "setup.txt"))
+            {
+                lines = File.ReadAllLines(file);
+            }
+            this.client.Authenticator = new HttpBasicAuthenticator(lines[0], lines[1]);
         }
 
         #region Helper Methods
@@ -24,7 +33,7 @@ namespace APITestsGitHub
         public async Task<Issue> CreateIssue(string title, string body)
         {
             //Arrange
-            var request = new RestRequest("/repos/TeamAlabala/CollectionTestsRepo/issues");
+            var request = new RestRequest("/repos/TeamAlabala/APISolutionAndPostman/issues");
 
             //Act
             request.AddBody(new { body, title });
@@ -40,10 +49,10 @@ namespace APITestsGitHub
         public async Task Test_GitHub_APIRequest()
         {
             //Arrange
-            var request = new RestRequest("/repos/TeamAlabala/CollectionTestsRepo/issues");
+            var request = new RestRequest("/repos/TeamAlabala/APISolutionAndPostman/issues");
 
             //Act
-            var responce = await this.client.ExecuteAsync(request);
+            var responce = await this.client.ExecuteAsync(request,Method.Get);
             var issues = JsonSerializer.Deserialize<List<Issue>>(responce.Content);
 
             //Assert
